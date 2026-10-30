@@ -18,6 +18,7 @@ It is an unofficial fan project, with no affiliation to the games' developers, p
 | **Dataset** | [starrydark/Tricolour_Lovestory_Voice](https://huggingface.co/datasets/starrydark/Tricolour_Lovestory_Voice): 21,665 voice lines, 22.8 h |
 | **Fine-tuning guide** | [Four silent bugs in the official Qwen3-TTS fine-tuning script, and multi-speaker / instruction training](docs/qwen3-tts-finetuning-fixes.md) |
 | **Results** | [`research/T1_results.md`](research/T1_results.md) |
+| **Sibling project** | [makise-kurisu-tts](https://github.com/starryark/makise-kurisu-tts): the single-character Makise Kurisu (STEINS;GATE) voice in Japanese, Mandarin and English, where this trainer and its fixes started |
 
 **Also known as:**
 - Tricolor Lovestory;
