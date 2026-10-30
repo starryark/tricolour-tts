@@ -1,0 +1,195 @@
+<title>Tricolour Emotion A/B</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one comparison at a time; two equal take cards side by side (stacked on phones),
+   the verdict buttons under them, the 48-pair grid at the foot. */
+:root {
+  --bg: #f4f3f7;
+  --panel: #ffffff;
+  --ink: #1d1b29;
+  --muted: #5f5b72;
+  --line: #dcd9e6;
+  --accent: #6d28d9;
+  --accent-ink: #ffffff;
+  --happy: #c2860a;
+  --angry: #c8322d;
+  --sad: #2f66c4;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14131b; --panel: #1d1b27; --ink: #ebe9f3; --muted: #a29eb6; --line: #2e2b3c;
+    --accent: #a78bfa; --accent-ink: #160f2a; --happy: #f2b632; --angry: #f0625d; --sad: #6b9bf2;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14131b; --panel: #1d1b27; --ink: #ebe9f3; --muted: #a29eb6; --line: #2e2b3c;
+  --accent: #a78bfa; --accent-ink: #160f2a; --happy: #f2b632; --angry: #f0625d; --sad: #6b9bf2;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: grid; gap: 10px; }
+h1 { font-size: 1.35rem; margin: 0; font-weight: 700; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+.progress { display: flex; align-items: center; gap: 12px; }
+.bar { flex: 1; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.bar > span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.count { font-family: var(--font-mono); font-size: .9rem; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 7ch; text-align: right; }
+.desk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 18px; }
+.q { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.q strong { font-size: 1.5rem; }
+.q .emo { font-size: 1.5rem; font-weight: 700; color: var(--c); }
+.q .num { margin-left: auto; font-family: var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.takes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .takes { grid-template-columns: 1fr; } }
+.take { border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: grid; gap: 10px; justify-items: start; }
+.take .lbl { font-family: var(--font-mono); font-size: 1.1rem; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.play { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 999px; padding: 8px 18px; font-weight: 700; }
+.verdict { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pick { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: transparent; font-weight: 700; }
+.pick[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.ghost { background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; color: var(--muted); }
+.ghost[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); }
+.nav { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.line { margin: 0; padding: 10px 12px; border-left: 3px solid var(--line); color: var(--muted); }
+.hint, .status { font-size: .85rem; color: var(--muted); margin: 0; }
+.status { min-height: 1.6em; }
+.status.err { color: var(--angry); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(22px, 1fr)); gap: 4px; }
+.cell { aspect-ratio: 1; max-width: 100%; border-radius: 3px; border: 1px solid var(--line); background: transparent; padding: 0; }
+.cell.done { border-color: transparent; background: var(--c); }
+.cell.cur { outline: 2px solid var(--ink); outline-offset: 1px; }
+h2 { font-size: 1rem; margin: 0; }
+@media (prefers-reduced-motion: reduce) { .bar > span { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>三色绘恋 · emotion A/B</h1>
+    <p class="lede">Each pair is the same character saying the same line twice. Play both and pick the take that sounds more like the emotion shown. If they sound alike, pick the one that leans that way. Judge the delivery, not the voice quality.</p>
+    <div class="progress"><div class="bar"><span id="barfill"></span></div><span class="count" id="count">0 / 0</span></div>
+  </header>
+
+  <section class="desk" aria-label="Current pair">
+    <div class="q"><strong id="who">—</strong><span>· which sounds more</span><span class="emo" id="emo">—</span><span class="num" id="num"></span></div>
+    <div class="takes">
+      <div class="take"><span class="lbl">Take A</span><button class="play" id="playA" type="button">▶ Play A (Q)</button></div>
+      <div class="take"><span class="lbl">Take B</span><button class="play" id="playB" type="button">▶ Play B (W)</button></div>
+    </div>
+    <div class="verdict">
+      <button class="pick" id="pickA" type="button" aria-pressed="false">A sounds more <span class="e"></span> (1)</button>
+      <button class="pick" id="pickB" type="button" aria-pressed="false">B sounds more <span class="e"></span> (2)</button>
+    </div>
+    <button class="ghost" id="showline" type="button" aria-pressed="false">Show line (T)</button>
+    <p class="line" id="line" hidden></p>
+    <div class="nav"><button class="ghost" id="prev" type="button">← Previous</button><button class="ghost" id="next" type="button">Next →</button></div>
+    <p class="status" id="status" role="status"></p>
+    <p class="hint">Keys: Q / W play A / B · 1 / 2 pick and move on · ← → move · T shows the line.</p>
+  </section>
+
+  <section style="display:grid;gap:10px" aria-label="All pairs">
+    <h2>All pairs</h2>
+    <div class="grid" id="grid"></div>
+  </section>
+</div>
+
+<script>
+const PAIRS = /*__PAIRS__*/[];
+const EMOC = { "开心": "var(--happy)", "生气": "var(--angry)", "伤心": "var(--sad)" };
+const $ = id => document.getElementById(id);
+const picks = {};
+let cur = 0, db = null, uid = null, writable = true, saving = false;
+const audio = new Audio();
+
+function renderStatic() {
+  const g = $("grid"); g.innerHTML = "";
+  PAIRS.forEach((p, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "cell"; b.title = p.n; b.setAttribute("aria-label", p.n);
+    b.style.setProperty("--c", EMOC[p.emo]);
+    b.addEventListener("click", () => go(i));
+    g.appendChild(b);
+  });
+}
+function render() {
+  const p = PAIRS[cur]; if (!p) return;
+  $("who").textContent = p.who;
+  $("emo").textContent = p.emo; $("emo").style.setProperty("--c", EMOC[p.emo]);
+  document.querySelectorAll(".pick .e").forEach(e => e.textContent = p.emo);
+  $("num").textContent = `${p.n} · ${cur + 1} of ${PAIRS.length}`;
+  $("line").textContent = p.text;
+  $("pickA").setAttribute("aria-pressed", String(picks[p.n] === "A"));
+  $("pickB").setAttribute("aria-pressed", String(picks[p.n] === "B"));
+  [...$("grid").children].forEach((el, i) => el.classList.toggle("cur", i === cur));
+  const done = PAIRS.filter(q => picks[q.n]).length;
+  $("count").textContent = `${done} / ${PAIRS.length}`;
+  $("barfill").style.width = (PAIRS.length ? 100 * done / PAIRS.length : 0) + "%";
+  PAIRS.forEach((q, i) => $("grid").children[i].classList.toggle("done", !!picks[q.n]));
+}
+function status(m, err) { $("status").textContent = m; $("status").classList.toggle("err", !!err); }
+function play(side) { audio.pause(); audio.src = `audio/${PAIRS[cur].n}_${side}.mp3`; audio.currentTime = 0; audio.play().catch(() => {}); }
+function go(i) { cur = Math.max(0, Math.min(PAIRS.length - 1, i)); audio.pause(); $("line").hidden = true; $("showline").setAttribute("aria-pressed", "false"); render(); }
+function nextOpen() { for (let k = 1; k <= PAIRS.length; k++) { const i = (cur + k) % PAIRS.length; if (!picks[PAIRS[i].n]) return i; } return cur; }
+
+async function pick(side) {
+  if (saving) return;
+  const p = PAIRS[cur];
+  if (!db) { status("Choices can't be saved in this view. Open the page on claude.ai while signed in.", true); return; }
+  if (!writable) { status("This view is read-only, so choices aren't saved.", true); return; }
+  saving = true;
+  try {
+    await db.doc("picks/" + p.n).set({ pick: side, rater: uid, at: new Date().toISOString() });
+    picks[p.n] = side; status("Saved " + p.n + "."); go(nextOpen());
+  } catch (e) {
+    if (e && e.code === "invalid_argument") { writable = false; status("This view is read-only, so choices aren't saved.", true); }
+    else status("Couldn't save " + p.n + ": " + (e && e.message || "unknown error") + ". Try again.", true);
+  } finally { saving = false; }
+}
+
+$("playA").addEventListener("click", () => play("A"));
+$("playB").addEventListener("click", () => play("B"));
+$("pickA").addEventListener("click", () => pick("A"));
+$("pickB").addEventListener("click", () => pick("B"));
+$("prev").addEventListener("click", () => go(cur - 1));
+$("next").addEventListener("click", () => go(cur + 1));
+$("showline").addEventListener("click", () => { const h = !$("line").hidden; $("line").hidden = h; $("showline").setAttribute("aria-pressed", String(!h)); });
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === "q") play("A"); else if (k === "w") play("B");
+  else if (k === "1") pick("A"); else if (k === "2") pick("B");
+  else if (k === "t") $("showline").click();
+  else if (k === "arrowleft") go(cur - 1); else if (k === "arrowright") go(cur + 1);
+});
+
+renderStatic(); render();
+if (!PAIRS.length) status("No pairs are loaded in this build.");
+(async () => {
+  try {
+    const user = await window.claude?.use?.("user");
+    uid = user ? await user.id() : null;
+    const can = user ? await user.can("data.write") : null;
+    if (can === false) { writable = false; status("You can listen here, but this view can't save choices."); }
+    db = await window.claude?.use?.("db");
+    if (!db) { status("Choices can't be saved in this view. Open the page on claude.ai while signed in."); return; }
+    let first = true;
+    db.collection("picks").onSnapshot(snap => {
+      snap.docs.forEach(d => { const b = d.data(); if (b && b.pick) picks[d.id] = b.pick; });
+      if (first) { first = false; const i = PAIRS.findIndex(p => !picks[p.n]); go(i < 0 ? 0 : i); } else render();
+    }, e => status("Live sync stopped (" + e.code + "). Reload the page to reconnect.", true));
+  } catch (e) { status("Couldn't connect to storage: " + (e && e.message || e), true); }
+})();
+</script>

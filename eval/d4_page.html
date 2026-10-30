@@ -1,0 +1,276 @@
+<title>Tricolour Emotion Labels</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a single listening desk. One clip at a time, the label rail under the play control,
+   the whole sample as a grid at the foot so progress and coverage read at a glance. */
+:root {
+  --bg: #f3f4f7;
+  --panel: #ffffff;
+  --ink: #1b2130;
+  --muted: #5d6578;
+  --line: #d9dde6;
+  --accent: #c2410c;
+  --accent-ink: #ffffff;
+  --e-neutral: #8a93a6;
+  --e-happy: #d99a07;
+  --e-angry: #d1342f;
+  --e-sad: #2f6fd1;
+  --e-surprised: #0f9488;
+  --e-fearful: #7b4fc9;
+  --e-other: #6b7280;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12151c; --panel: #1b2029; --ink: #e8ebf2; --muted: #9aa3b5; --line: #2c3340;
+    --accent: #f08a4b; --accent-ink: #1b1209;
+    --e-neutral: #9aa3b5; --e-happy: #f2b632; --e-angry: #f0625d; --e-sad: #5b95f0;
+    --e-surprised: #2fc2b3; --e-fearful: #a582ea; --e-other: #8b93a3;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12151c; --panel: #1b2029; --ink: #e8ebf2; --muted: #9aa3b5; --line: #2c3340;
+  --accent: #f08a4b; --accent-ink: #1b1209;
+  --e-neutral: #9aa3b5; --e-happy: #f2b632; --e-angry: #f0625d; --e-sad: #5b95f0;
+  --e-surprised: #2fc2b3; --e-fearful: #a582ea; --e-other: #8b93a3;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: grid; gap: 10px; }
+h1 { font-size: 1.35rem; font-weight: 700; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+.progress { display: flex; align-items: center; gap: 12px; }
+.bar { flex: 1; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.bar > span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.count { font-family: var(--font-mono); font-size: .9rem; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 7ch; text-align: right; }
+.desk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 18px; }
+.who { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.who strong { font-size: 1.6rem; font-weight: 700; letter-spacing: .02em; }
+.who .num { font-family: var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.play { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.playbtn { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 999px; padding: 10px 22px; font-weight: 700; }
+.ghost { background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; color: var(--muted); }
+.ghost[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); }
+.line { margin: 0; padding: 10px 12px; border-left: 3px solid var(--line); color: var(--muted); font-size: 1.05rem; }
+.labels { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.lab { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; text-align: left; }
+.lab .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; background: var(--c); }
+.lab .k { margin-left: auto; font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+.lab .zh { font-weight: 500; }
+.lab .en { color: var(--muted); font-size: .85rem; }
+.lab[aria-pressed="true"] { border-color: var(--c); box-shadow: inset 0 0 0 2px var(--c); }
+.mods { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.nav { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+.hint { font-size: .85rem; color: var(--muted); margin: 0; }
+.status { font-size: .9rem; color: var(--muted); min-height: 1.6em; margin: 0; }
+.status.err { color: var(--e-angry); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(18px, 1fr)); gap: 4px; }
+.cell { aspect-ratio: 1; max-width: 100%; border-radius: 3px; border: 1px solid var(--line); background: transparent; padding: 0; }
+.cell.done { border-color: transparent; background: var(--c); }
+.cell.cur { outline: 2px solid var(--ink); outline-offset: 1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .85rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); display: inline-block; }
+h2 { font-size: 1rem; margin: 0; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .bar > span { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>三色绘恋 · emotion labels</h1>
+    <p class="lede">Listen to each line and pick the emotion you <em>hear</em>, not the one the words suggest. These labels check how well the automatic emotion model reads this cast, before it is used to teach emotion control.</p>
+    <div class="progress"><div class="bar"><span id="barfill"></span></div><span class="count" id="count">0 / 0</span></div>
+  </header>
+
+  <section class="desk" aria-label="Current clip">
+    <div class="who"><strong id="who">—</strong><span class="num" id="num"></span></div>
+    <div class="play">
+      <button class="playbtn" id="play" type="button">▶ Play <span class="k">(Space)</span></button>
+      <button class="ghost" id="showline" type="button" aria-pressed="false">Show line (T)</button>
+      <audio id="audio" preload="auto"></audio>
+    </div>
+    <p class="line" id="line" hidden></p>
+    <div class="labels" id="labels" role="group" aria-label="Emotion"></div>
+    <div class="mods">
+      <button class="ghost" id="soft" type="button" aria-pressed="false">轻声 / whisper (S)</button>
+      <button class="ghost" id="strong" type="button" aria-pressed="false">强烈 / strong (D)</button>
+    </div>
+    <div class="nav">
+      <button class="ghost" id="prev" type="button">← Previous</button>
+      <button class="ghost" id="next" type="button">Next →</button>
+    </div>
+    <p class="status" id="status" role="status"></p>
+    <p class="hint">Keys: 1–7 pick a label and move on · S / D toggle whisper and strong · ← → move · T shows the script line.</p>
+  </section>
+
+  <section style="display:grid;gap:10px" aria-label="All clips">
+    <h2>All clips</h2>
+    <div class="legend" id="legend"></div>
+    <div class="grid" id="grid"></div>
+  </section>
+</div>
+
+<script>
+const CLIPS = /*__CLIPS__*/[];
+const LABELS = [
+  { id: "neutral", zh: "平静", en: "neutral" },
+  { id: "happy", zh: "开心", en: "happy" },
+  { id: "angry", zh: "生气", en: "angry" },
+  { id: "sad", zh: "伤心", en: "sad" },
+  { id: "surprised", zh: "惊讶", en: "surprised" },
+  { id: "fearful", zh: "害怕 / 紧张", en: "afraid / nervous" },
+  { id: "other", zh: "其他 / 混合", en: "other / mixed" },
+];
+const color = id => `var(--e-${id})`;
+const $ = id => document.getElementById(id);
+const labels = {};          // clip n -> {label, soft, strong}
+let cur = 0, db = null, uid = null, writable = true, interacted = false, saving = false;
+
+function cellFor(i) { return $("grid").children[i]; }
+
+function renderStatic() {
+  $("labels").innerHTML = "";
+  LABELS.forEach((l, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "lab"; b.id = "lab-" + l.id; b.style.setProperty("--c", color(l.id));
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = `<span class="dot"></span><span><span class="zh"></span><br><span class="en"></span></span><span class="k">${i + 1}</span>`;
+    b.querySelector(".zh").textContent = l.zh; b.querySelector(".en").textContent = l.en;
+    b.addEventListener("click", () => choose(l.id));
+    $("labels").appendChild(b);
+  });
+  $("legend").innerHTML = "";
+  LABELS.forEach(l => { const s = document.createElement("span"); s.innerHTML = `<i style="--c:${color(l.id)}"></i>`; s.append(l.en); $("legend").appendChild(s); });
+  const g = $("grid"); g.innerHTML = "";
+  CLIPS.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "cell"; b.title = c.n; b.setAttribute("aria-label", c.n);
+    b.addEventListener("click", () => go(i, true));
+    g.appendChild(b);
+  });
+}
+
+function renderClip() {
+  const c = CLIPS[cur]; if (!c) return;
+  const v = labels[c.n] || {};
+  $("who").textContent = c.who;
+  $("num").textContent = `${c.n} · ${cur + 1} of ${CLIPS.length}`;
+  $("line").textContent = c.text;
+  LABELS.forEach(l => $("lab-" + l.id).setAttribute("aria-pressed", String(v.label === l.id)));
+  $("soft").setAttribute("aria-pressed", String(!!v.soft));
+  $("strong").setAttribute("aria-pressed", String(!!v.strong));
+  [...$("grid").children].forEach((el, i) => el.classList.toggle("cur", i === cur));
+  const a = $("audio"); a.src = `audio/${c.n}.mp3`;
+}
+
+function renderProgress() {
+  const done = CLIPS.filter(c => labels[c.n] && labels[c.n].label).length;
+  $("count").textContent = `${done} / ${CLIPS.length}`;
+  $("barfill").style.width = (CLIPS.length ? 100 * done / CLIPS.length : 0) + "%";
+  CLIPS.forEach((c, i) => {
+    const el = cellFor(i), v = labels[c.n];
+    el.classList.toggle("done", !!(v && v.label));
+    el.style.setProperty("--c", v && v.label ? color(v.label) : "transparent");
+  });
+}
+
+function status(msg, err) { $("status").textContent = msg; $("status").classList.toggle("err", !!err); }
+
+function play() { interacted = true; const a = $("audio"); a.currentTime = 0; a.play().catch(() => {}); }
+
+function go(i, autoplay) {
+  cur = Math.max(0, Math.min(CLIPS.length - 1, i));
+  $("line").hidden = true; $("showline").setAttribute("aria-pressed", "false");
+  renderClip();
+  if (autoplay && interacted) play();
+}
+
+function nextOpen() {
+  for (let k = 1; k <= CLIPS.length; k++) {
+    const i = (cur + k) % CLIPS.length;
+    if (!(labels[CLIPS[i].n] && labels[CLIPS[i].n].label)) return i;
+  }
+  return Math.min(cur + 1, CLIPS.length - 1);
+}
+
+async function save(n, body) {
+  if (!db) { status("Labels can't be saved in this view. Open the page on claude.ai while signed in.", true); return false; }
+  if (!writable) { status("This view is read-only, so labels aren't saved.", true); return false; }
+  saving = true;
+  try {
+    await db.doc("labels/" + n).set({ ...body, rater: uid, at: new Date().toISOString() });
+    status("Saved " + n + ".");
+    return true;
+  } catch (e) {
+    if (e && e.code === "invalid_argument") { writable = false; status("This view is read-only, so labels aren't saved.", true); }
+    else status("Couldn't save " + n + ": " + (e && e.message || "unknown error") + ". Pick the label again to retry.", true);
+    return false;
+  } finally { saving = false; }
+}
+
+async function choose(label) {
+  interacted = true;
+  const c = CLIPS[cur]; const v = labels[c.n] || {};
+  const body = { label, soft: !!v.soft, strong: !!v.strong };
+  labels[c.n] = body; renderClip(); renderProgress();
+  if (await save(c.n, body)) go(nextOpen(), true);
+}
+
+async function toggle(field) {
+  const c = CLIPS[cur]; const v = { ...(labels[c.n] || {}) };
+  v[field] = !v[field]; labels[c.n] = v; renderClip();
+  if (v.label) await save(c.n, { label: v.label, soft: !!v.soft, strong: !!v.strong });
+}
+
+$("play").addEventListener("click", play);
+$("prev").addEventListener("click", () => go(cur - 1, true));
+$("next").addEventListener("click", () => go(cur + 1, true));
+$("soft").addEventListener("click", () => toggle("soft"));
+$("strong").addEventListener("click", () => toggle("strong"));
+$("showline").addEventListener("click", () => { const h = !$("line").hidden; $("line").hidden = h; $("showline").setAttribute("aria-pressed", String(!h)); });
+document.addEventListener("keydown", e => {
+  if (e.target.closest && e.target.closest("input,textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === " ") { e.preventDefault(); play(); }
+  else if (/^[1-7]$/.test(k)) { if (!saving) choose(LABELS[+k - 1].id); }
+  else if (k === "s") toggle("soft");
+  else if (k === "d") toggle("strong");
+  else if (k === "t") $("showline").click();
+  else if (k === "arrowleft") go(cur - 1, true);
+  else if (k === "arrowright") go(cur + 1, true);
+});
+
+renderStatic(); renderClip(); renderProgress();
+if (!CLIPS.length) status("No clips are loaded in this build.");
+
+(async () => {
+  try {
+    const user = await window.claude?.use?.("user");
+    uid = user ? await user.id() : null;
+    const can = user ? await user.can("data.write") : null;
+    if (can === false) { writable = false; status("You can listen here, but this view can't save labels."); }
+    db = await window.claude?.use?.("db");
+    if (!db) { status("Labels can't be saved in this view. Open the page on claude.ai while signed in."); return; }
+    let first = true;
+    db.collection("labels").onSnapshot(snap => {
+      snap.docs.forEach(d => { const b = d.data(); if (b) labels[d.id] = { label: b.label, soft: !!b.soft, strong: !!b.strong }; });
+      renderProgress();
+      if (first) { first = false; const i = CLIPS.findIndex(c => !(labels[c.n] && labels[c.n].label)); go(i < 0 ? 0 : i, false); }
+      else renderClip();
+    }, e => status("Live sync stopped (" + e.code + "). Reload the page to reconnect.", true));
+  } catch (e) { status("Couldn't connect to label storage: " + (e && e.message || e), true); }
+})();
+</script>

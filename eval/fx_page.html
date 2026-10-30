@@ -1,0 +1,266 @@
+<title>Tricolour Effect Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one listening desk, effect toggles under the play control, the 100-clip grid at the foot. */
+:root {
+  --bg: #f2f4f6;
+  --panel: #ffffff;
+  --ink: #18202b;
+  --muted: #5a6474;
+  --line: #d6dbe3;
+  --accent: #0f6e8c;
+  --accent-ink: #ffffff;
+  --fx-clean: #8a93a6;
+  --fx-echo: #b45309;
+  --fx-reverb: #7c3aed;
+  --fx-phone: #0e7490;
+  --fx-noise: #b91c1c;
+  --fx-other: #4b5563;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151b; --panel: #1a2029; --ink: #e6eaf1; --muted: #98a2b4; --line: #2b3340;
+    --accent: #38a9cc; --accent-ink: #08161c;
+    --fx-clean: #9aa3b5; --fx-echo: #f59e0b; --fx-reverb: #a78bfa; --fx-phone: #22b8d4; --fx-noise: #f87171; --fx-other: #9ca3af;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151b; --panel: #1a2029; --ink: #e6eaf1; --muted: #98a2b4; --line: #2b3340;
+  --accent: #38a9cc; --accent-ink: #08161c;
+  --fx-clean: #9aa3b5; --fx-echo: #f59e0b; --fx-reverb: #a78bfa; --fx-phone: #22b8d4; --fx-noise: #f87171; --fx-other: #9ca3af;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 760px; margin: 0 auto; display: grid; gap: 20px; }
+header { display: grid; gap: 10px; }
+h1 { font-size: 1.35rem; font-weight: 700; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+.progress { display: flex; align-items: center; gap: 12px; }
+.bar { flex: 1; height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.bar > span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.count { font-family: var(--font-mono); font-size: .9rem; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 7ch; text-align: right; }
+.desk { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 18px; }
+.who { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.who strong { font-size: 1.6rem; font-weight: 700; letter-spacing: .02em; }
+.who .num { font-family: var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.play { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.playbtn { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 999px; padding: 10px 22px; font-weight: 700; }
+.ghost { background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; color: var(--muted); }
+.ghost[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); }
+.line { margin: 0; padding: 10px 12px; border-left: 3px solid var(--line); color: var(--muted); font-size: 1.05rem; }
+.fx { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.tog { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; text-align: left; }
+.tog .dot { width: 12px; height: 12px; border-radius: 3px; flex: none; background: var(--c); }
+.tog .k { margin-left: auto; font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+.tog .zh { font-weight: 500; }
+.tog .en { color: var(--muted); font-size: .85rem; }
+.tog[aria-pressed="true"] { border-color: var(--c); box-shadow: inset 0 0 0 2px var(--c); }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.save { background: var(--ink); color: var(--bg); border: 0; border-radius: 8px; padding: 10px 18px; font-weight: 700; }
+.nav { display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+.hint { font-size: .85rem; color: var(--muted); margin: 0; }
+.status { font-size: .9rem; color: var(--muted); min-height: 1.6em; margin: 0; }
+.status.err { color: var(--fx-noise); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(22px, 1fr)); gap: 4px; }
+.cell { aspect-ratio: 1; max-width: 100%; border-radius: 3px; border: 1px solid var(--line); background: transparent; padding: 0; }
+.cell.done { border-color: transparent; background: var(--c); }
+.cell.cur { outline: 2px solid var(--ink); outline-offset: 1px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .85rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 3px; background: var(--c); display: inline-block; }
+h2 { font-size: 1rem; margin: 0; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .bar > span { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>三色绘恋 · effect check</h1>
+    <p class="lede">Each clip is the original game file, with its full tail. Mark every processing effect you hear on the voice. If you hear none, press Clean. Judge the sound, not the situation: a line about phones is not a phone effect unless it sounds like one.</p>
+    <div class="progress"><div class="bar"><span id="barfill"></span></div><span class="count" id="count">0 / 0</span></div>
+  </header>
+
+  <section class="desk" aria-label="Current clip">
+    <div class="who"><strong id="who">—</strong><span class="num" id="num"></span></div>
+    <div class="play">
+      <button class="playbtn" id="play" type="button">▶ Play <span class="k">(Space)</span></button>
+      <button class="ghost" id="showline" type="button" aria-pressed="false">Show line (T)</button>
+      <audio id="audio" preload="auto"></audio>
+    </div>
+    <p class="line" id="line" hidden></p>
+    <div class="fx" id="fx" role="group" aria-label="Effects heard"></div>
+    <div class="actions">
+      <button class="save" id="clean" type="button">Clean, no effect (1)</button>
+      <button class="save" id="save" type="button">Save effects &amp; next (Enter)</button>
+      <button class="ghost" id="unsure" type="button" aria-pressed="false">Not sure (U)</button>
+    </div>
+    <div class="nav">
+      <button class="ghost" id="prev" type="button">← Previous</button>
+      <button class="ghost" id="next" type="button">Next →</button>
+    </div>
+    <p class="status" id="status" role="status"></p>
+    <p class="hint">Keys: 1 clean and move on · 2–6 toggle effects, then Enter · U toggles not sure · ← → move · T shows the script line.</p>
+  </section>
+
+  <section style="display:grid;gap:10px" aria-label="All clips">
+    <h2>All clips</h2>
+    <div class="legend" id="legend"></div>
+    <div class="grid" id="grid"></div>
+  </section>
+</div>
+
+<script>
+const CLIPS = /*__CLIPS__*/[];
+const FX = [
+  { id: "echo", zh: "回声", en: "echo: distinct repeats" },
+  { id: "reverb", zh: "混响 / 空间感", en: "reverb: room or hall tail" },
+  { id: "phone", zh: "电话 / 广播 / 电子音", en: "phone, radio, digital" },
+  { id: "noise", zh: "噪声 / 底噪", en: "noise, hiss, hum" },
+  { id: "other", zh: "其他效果", en: "other processing" },
+];
+const color = id => `var(--fx-${id})`;
+const $ = id => document.getElementById(id);
+const labels = {};          // clip n -> {clean, echo, reverb, phone, noise, other, unsure}
+let draft = {};             // toggles on the current clip, not yet saved
+let cur = 0, db = null, uid = null, writable = true, interacted = false, saving = false;
+
+function blank() { return { echo: false, reverb: false, phone: false, noise: false, other: false, unsure: false }; }
+function firstFx(v) { const f = FX.find(x => v[x.id]); return f ? f.id : "clean"; }
+
+function renderStatic() {
+  $("fx").innerHTML = "";
+  FX.forEach((f, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "tog"; b.id = "fx-" + f.id; b.style.setProperty("--c", color(f.id));
+    b.setAttribute("aria-pressed", "false");
+    b.innerHTML = `<span class="dot"></span><span><span class="zh"></span><br><span class="en"></span></span><span class="k">${i + 2}</span>`;
+    b.querySelector(".zh").textContent = f.zh; b.querySelector(".en").textContent = f.en;
+    b.addEventListener("click", () => toggle(f.id));
+    $("fx").appendChild(b);
+  });
+  $("legend").innerHTML = "";
+  [{ id: "clean", en: "clean" }, ...FX].forEach(f => { const s = document.createElement("span"); s.innerHTML = `<i style="--c:${color(f.id)}"></i>`; s.append(f.en.split(":")[0]); $("legend").appendChild(s); });
+  const g = $("grid"); g.innerHTML = "";
+  CLIPS.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "cell"; b.title = c.n; b.setAttribute("aria-label", c.n);
+    b.addEventListener("click", () => go(i, true));
+    g.appendChild(b);
+  });
+}
+
+function renderClip() {
+  const c = CLIPS[cur]; if (!c) return;
+  $("who").textContent = c.who;
+  $("num").textContent = `${c.n} · ${cur + 1} of ${CLIPS.length}`;
+  $("line").textContent = c.text;
+  FX.forEach(f => $("fx-" + f.id).setAttribute("aria-pressed", String(!!draft[f.id])));
+  $("unsure").setAttribute("aria-pressed", String(!!draft.unsure));
+  [...$("grid").children].forEach((el, i) => el.classList.toggle("cur", i === cur));
+}
+
+function renderProgress() {
+  const done = CLIPS.filter(c => labels[c.n]).length;
+  $("count").textContent = `${done} / ${CLIPS.length}`;
+  $("barfill").style.width = (CLIPS.length ? 100 * done / CLIPS.length : 0) + "%";
+  CLIPS.forEach((c, i) => {
+    const el = $("grid").children[i], v = labels[c.n];
+    el.classList.toggle("done", !!v);
+    el.style.setProperty("--c", v ? color(firstFx(v)) : "transparent");
+  });
+}
+
+function status(msg, err) { $("status").textContent = msg; $("status").classList.toggle("err", !!err); }
+function play() { interacted = true; const a = $("audio"); a.currentTime = 0; a.play().catch(() => {}); }
+
+function go(i, autoplay) {
+  cur = Math.max(0, Math.min(CLIPS.length - 1, i));
+  const v = labels[CLIPS[cur].n];
+  draft = v ? { ...blank(), ...v } : blank();
+  $("line").hidden = true; $("showline").setAttribute("aria-pressed", "false");
+  $("audio").src = `audio/${CLIPS[cur].n}.mp3`;
+  renderClip();
+  if (autoplay && interacted) play();
+}
+
+function nextOpen() {
+  for (let k = 1; k <= CLIPS.length; k++) {
+    const i = (cur + k) % CLIPS.length;
+    if (!labels[CLIPS[i].n]) return i;
+  }
+  return Math.min(cur + 1, CLIPS.length - 1);
+}
+
+function toggle(id) { interacted = true; draft[id] = !draft[id]; renderClip(); }
+
+async function commit(clean) {
+  if (saving) return;
+  interacted = true;
+  const c = CLIPS[cur];
+  const body = clean ? { ...blank(), unsure: !!draft.unsure, clean: true } : { ...draft, clean: !FX.some(f => draft[f.id]) };
+  if (!db) { status("Labels can't be saved in this view. Open the page on claude.ai while signed in.", true); return; }
+  if (!writable) { status("This view is read-only, so labels aren't saved.", true); return; }
+  saving = true;
+  try {
+    await db.doc("labels/" + c.n).set({ ...body, rater: uid, at: new Date().toISOString() });
+    labels[c.n] = body; renderProgress();
+    status("Saved " + c.n + (body.clean ? " as clean." : "."));
+    go(nextOpen(), true);
+  } catch (e) {
+    if (e && e.code === "invalid_argument") { writable = false; status("This view is read-only, so labels aren't saved.", true); }
+    else status("Couldn't save " + c.n + ": " + (e && e.message || "unknown error") + ". Try again.", true);
+  } finally { saving = false; }
+}
+
+$("play").addEventListener("click", play);
+$("clean").addEventListener("click", () => commit(true));
+$("save").addEventListener("click", () => commit(false));
+$("unsure").addEventListener("click", () => toggle("unsure"));
+$("prev").addEventListener("click", () => go(cur - 1, true));
+$("next").addEventListener("click", () => go(cur + 1, true));
+$("showline").addEventListener("click", () => { const h = !$("line").hidden; $("line").hidden = h; $("showline").setAttribute("aria-pressed", String(!h)); });
+document.addEventListener("keydown", e => {
+  if (e.target.closest && e.target.closest("input,textarea") || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === " ") { e.preventDefault(); play(); }
+  else if (k === "1") commit(true);
+  else if (/^[2-6]$/.test(k)) toggle(FX[+k - 2].id);
+  else if (k === "enter") { e.preventDefault(); commit(false); }
+  else if (k === "u") toggle("unsure");
+  else if (k === "t") $("showline").click();
+  else if (k === "arrowleft") go(cur - 1, true);
+  else if (k === "arrowright") go(cur + 1, true);
+});
+
+renderStatic(); go(0, false); renderProgress();
+if (!CLIPS.length) status("No clips are loaded in this build.");
+
+(async () => {
+  try {
+    const user = await window.claude?.use?.("user");
+    uid = user ? await user.id() : null;
+    const can = user ? await user.can("data.write") : null;
+    if (can === false) { writable = false; status("You can listen here, but this view can't save labels."); }
+    db = await window.claude?.use?.("db");
+    if (!db) { status("Labels can't be saved in this view. Open the page on claude.ai while signed in."); return; }
+    let first = true;
+    db.collection("labels").onSnapshot(snap => {
+      snap.docs.forEach(d => { const b = d.data(); if (b) labels[d.id] = { ...blank(), ...b }; });
+      renderProgress();
+      if (first) { first = false; const i = CLIPS.findIndex(c => !labels[c.n]); go(i < 0 ? 0 : i, false); }
+    }, e => status("Live sync stopped (" + e.code + "). Reload the page to reconnect.", true));
+  } catch (e) { status("Couldn't connect to label storage: " + (e && e.message || e), true); }
+})();
+</script>
