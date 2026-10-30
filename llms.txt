@@ -1,0 +1,51 @@
+# tricolour-tts
+
+> Reference-free Mandarin text-to-speech for 14 characters of the Tricolour Lovestory (三色绘恋) visual novels, made by fine-tuning Qwen3-TTS-12Hz-1.7B-CustomVoice on the games' own voice lines, with emotion instructions (angry and sad clearly followed, happy weaker). This repository holds the full pipeline and a fixed multi-speaker Qwen3-TTS trainer. Unofficial fan project; no rights to the voices are granted.
+
+**Key facts:**
+- **Characters:** 14 (speaker ids in pinyin): moxiaoju 墨小菊, wenzhi 文芷, luoyan 骆衍, chiguo 迟菓, chiyao 迟耀, yexin 叶心, zhute 朱特, moshu 墨叔, huanglili 黄丽丽, dinglaoshi 丁老师, linjie 琳姐, wenzhou 文绉, xuyayi 徐阿姨, ciertou 刺儿头.
+- **Use:**
+  - `Qwen3TTSModel.from_pretrained("starrydark/Tricolour_Lovestory_Qwen3_TTS").generate_custom_voice(text=..., speaker="chiguo", language="Chinese", instruct="用生气的语气说")`
+  - Package: `pip install qwen-tts`.
+- **Results on held-out lines:**
+  - pinyin CER 0.0096;
+  - speaker identity 0.936 among the 14 characters, against 0.967 for real recordings;
+  - identity under emotion instructions 0.942.
+- **Blind A/B, 16 pairs each:** angry 14/16, sad 16/16, happy 12/16.
+- **Weakest voice:** 黄丽丽 huanglili, identity 0.47.
+- **Data:**
+  - The dataset has 21,665 clips (22.8 h).
+  - Training used 19,829 clean train-split lines plus 1,491 instruction-replay clips (20.9 h).
+- **Compute:** 13 minutes of training on one H100; about $12 for the whole study.
+- **Official script bugs:** the official Qwen3-TTS fine-tuning script (`finetuning/sft_12hz.py`, as of commit 022e286, 2026-03-17) has four silent bugs:
+  - labels shifted twice;
+  - the sub-talker reads the frame it predicts;
+  - `text_projection` skipped;
+  - the speaker encoder decays under AdamW.
+
+  `train/train_sft.py` fixes them. Upstream issues: #278, #337, #336, #351.
+
+## Docs
+
+- [README](https://github.com/starryark/tricolour-tts/blob/main/README.md): overview, quick start, build-your-own recipe, FAQ
+- [Qwen3-TTS fine-tuning fixes](https://github.com/starryark/tricolour-tts/blob/main/docs/qwen3-tts-finetuning-fixes.md): the four bugs, multi-speaker training, keeping CustomVoice instructions, the exact training command
+- [Results](https://github.com/starryark/tricolour-tts/blob/main/research/T1_results.md): all scores, checkpoint selection, human emotion A/B
+- [Approach report](https://github.com/starryark/tricolour-tts/blob/main/research/voice_model_approach_2026-10.md): model choice, emotion control, evaluation design, production effects (phone/echo)
+
+## Release
+
+- [Model](https://huggingface.co/starrydark/Tricolour_Lovestory_Qwen3_TTS): Qwen3-TTS custom_voice checkpoint, model card with per-character scores
+- [Demo Space](https://huggingface.co/spaces/starrydark/Tricolour_Lovestory_TTS): Gradio on ZeroGPU
+- [Dataset](https://huggingface.co/datasets/starrydark/Tricolour_Lovestory_Voice): 24 kHz FLAC, text, two ASR transcripts, effect flags, 310 human emotion labels
+
+## Code
+
+- [train/train_sft.py](https://github.com/starryark/tricolour-tts/blob/main/train/train_sft.py): full or LoRA fine-tuning, many speakers, instruction prefix, preset-safe speaker rows
+- [train/test_equivalence_tri.py](https://github.com/starryark/tricolour-tts/blob/main/train/test_equivalence_tri.py): trainer inputs match generate_custom_voice position by position
+- [build/](https://github.com/starryark/tricolour-tts/tree/main/build): data pipeline b01–b11
+- [eval/](https://github.com/starryark/tricolour-tts/tree/main/eval): CAM++ identity, Paraformer CER, blind listening pages
+
+## Optional
+
+- [Pre-registration](https://github.com/starryark/tricolour-tts/blob/main/research/T1_preregistration.md)
+- [Literature notes](https://github.com/starryark/tricolour-tts/tree/main/research/notes)
